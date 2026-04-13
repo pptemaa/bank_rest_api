@@ -1,12 +1,16 @@
 package com.example.bankcards.controller;
+import com.example.bankcards.dto.UserResponseDto;
 import com.example.bankcards.dto.UserRegistrationDto;
+import com.example.bankcards.entity.Role;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Пользователи", description = "Методы для управления клиентами банка")
@@ -21,5 +25,30 @@ public class UserController {
     public String registerUser(@Valid @RequestBody UserRegistrationDto request) {
         User savedUser = userService.createUser(request.getUsername(), request.getPassword());
         return "Пользователь " + savedUser.getUsername() + " успешно зарегистрирован с ID: " + savedUser.getId();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Получить всех пользователей", description = "Доступно только администратору.")
+    public List<UserResponseDto> getAllUsers() {
+        return userService.getAllUsers().stream()
+                .map(user -> new UserResponseDto(user.getId(), user.getUsername(), user.getRole()))
+                .toList();
+    }
+
+    @PatchMapping("/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Изменить роль пользователя", description = "Доступно только администратору.")
+    public UserResponseDto updateUserRole(@PathVariable Long userId, @RequestParam Role role) {
+        User updatedUser = userService.updateUserRole(userId, role);
+        return new UserResponseDto(updatedUser.getId(), updatedUser.getUsername(), updatedUser.getRole());
+    }
+
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Удалить пользователя", description = "Доступно только администратору.")
+    public void deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
     }
 }

@@ -47,23 +47,61 @@ public class CardService {
         } while (cardRepository.existsByCardNumber(cardNumber));
         return cardNumber;
     }
+
     public List<Card> getCardsByUserId(Long userId){
         userService.getUserById(userId);
         return cardRepository.findAllByUserId(userId);
     }
-    public Card blockCard(Long cardId){
-        Card card = cardRepository.findById(cardId).orElseThrow(()->new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
+
+    public List<Card> getCardsForUser(Long userId) {
+        return cardRepository.findAllByUserId(userId);
+    }
+
+    public List<Card> getAllCards() {
+        return cardRepository.findAll();
+    }
+
+    public Card blockCardByAdmin(Long cardId){
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
         card.setStatus(CardStatus.BLOCKED);
         return cardRepository.save(card);
     }
 
+    public Card requestBlockCard(Long cardId, Long userId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
+        if (!card.getUser().getId().equals(userId)) {
+            throw new TransferException("Нельзя запрашивать блокировку чужой карты");
+        }
+        card.setStatus(CardStatus.BLOCKED);
+        return cardRepository.save(card);
+    }
+
+    public Card activateCard(Long cardId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
+        card.setStatus(CardStatus.ACTIVE);
+        return cardRepository.save(card);
+    }
+
+    public void deleteCard(Long cardId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
+        cardRepository.delete(card);
+    }
+
     @Transactional
-    public void transferMoney(Long fromCardId, String toCardNumber, BigDecimal amount) {
+    public void transferMoney(Long userId, Long fromCardId, String toCardNumber, BigDecimal amount) {
         Card fromCard = cardRepository.findById(fromCardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Карта отправителя не найдена"));
 
         Card toCard = cardRepository.findByCardNumber(toCardNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Карта получателя не найдена"));
+
+        if (!fromCard.getUser().getId().equals(userId) || !toCard.getUser().getId().equals(userId)) {
+            throw new TransferException("Переводы разрешены только между своими картами");
+        }
 
         if (fromCard.getBalance().compareTo(amount) < 0) {
             throw new TransferException("Недостаточно средств на карте");
