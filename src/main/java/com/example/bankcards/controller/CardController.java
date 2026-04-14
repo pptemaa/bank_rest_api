@@ -9,12 +9,14 @@ import com.example.bankcards.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/cards")
@@ -44,35 +46,56 @@ public class CardController {
     @GetMapping("/all")
     @Operation(
             summary = "Получение списка всех карт",
-            description = "Возвращает список всех банковских карт в системе. Доступно только администратору."
+            description = "Возвращает список всех банковских карт в системе с пагинацией. Доступно только администратору."
     )
     @PreAuthorize("hasRole('ADMIN')")
-    public List<CardResponseDto> getAllCards() {
-        List<Card> cards = cardService.getAllCards();
-        return cards.stream().map(cardMapper::toDto).toList();
+    public Page<CardResponseDto> getAllCards(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Pageable pageable = buildPageable(page, size, direction);
+        return cardService.getAllCards(pageable).map(cardMapper::toDto);
     }
 
     @GetMapping("/user/{userId}")
     @Operation(
             summary = "Получение списка карт пользователя администратором",
-            description = "Возвращает список карт пользователя с переданным ID. Доступно только администратору."
+            description = "Возвращает список карт пользователя с пагинацией. Доступно только администратору."
     )
     @PreAuthorize("hasRole('ADMIN')")
-    public List<CardResponseDto> getUserCardsByAdmin(@PathVariable Long userId) {
-        List<Card> cards = cardService.getCardsByUserId(userId);
-        return cards.stream().map(cardMapper::toDto).toList();
+    public Page<CardResponseDto> getUserCardsByAdmin(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Pageable pageable = buildPageable(page, size, direction);
+        return cardService.getCardsByUserId(userId, pageable).map(cardMapper::toDto);
     }
 
     @GetMapping("/me")
     @Operation(
             summary = "Получение списка своих карт",
-            description = "Возвращает список карт текущего авторизованного пользователя."
+            description = "Возвращает список карт текущего авторизованного пользователя с пагинацией."
     )
     @PreAuthorize("hasRole('USER')")
-    public List<CardResponseDto> getCurrentUserCards(Authentication authentication) {
+    public Page<CardResponseDto> getCurrentUserCards(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Pageable pageable = buildPageable(page, size, direction);
         User currentUser = (User) authentication.getPrincipal();
-        List<Card> cards = cardService.getCardsForUser(currentUser.getId());
-        return cards.stream().map(cardMapper::toDto).toList();
+        return cardService.getCardsForUser(currentUser.getId(), pageable).map(cardMapper::toDto);
+    }
+
+    private Pageable buildPageable(int page, int size, String direction) {
+        Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction)
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+        return PageRequest.of(page, size, Sort.by(sortDirection, "id"));
     }
 
     @PatchMapping("/{cardId}/block-request")

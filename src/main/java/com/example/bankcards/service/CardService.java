@@ -6,8 +6,11 @@ import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.ResourceNotFoundException;
 import com.example.bankcards.exception.TransferException;
 import com.example.bankcards.repository.CardRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -48,17 +51,17 @@ public class CardService {
         return cardNumber;
     }
 
-    public List<Card> getCardsByUserId(Long userId){
+    public Page<Card> getCardsByUserId(Long userId, Pageable pageable){
         userService.getUserById(userId);
-        return cardRepository.findAllByUserId(userId);
+        return cardRepository.findAllByUserId(userId, pageable);
     }
 
-    public List<Card> getCardsForUser(Long userId) {
-        return cardRepository.findAllByUserId(userId);
+    public Page<Card> getCardsForUser(Long userId, Pageable pageable) {
+        return cardRepository.findAllByUserId(userId, pageable);
     }
 
-    public List<Card> getAllCards() {
-        return cardRepository.findAll();
+    public Page<Card> getAllCards(Pageable pageable) {
+        return cardRepository.findAll(pageable);
     }
 
     public Card blockCardByAdmin(Long cardId){
