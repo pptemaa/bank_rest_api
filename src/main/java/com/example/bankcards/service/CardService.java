@@ -16,6 +16,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Service for card lifecycle management and money transfers.
+ */
 @Service
 public class CardService {
 
@@ -27,6 +30,7 @@ public class CardService {
         this.userService = userService;
     }
 
+    /** Creates a new active card for user. */
     public Card createCardForUser(Long userId) {
         User user = userService.getUserById(userId);
         Card card = new Card();
@@ -51,19 +55,23 @@ public class CardService {
         return cardNumber;
     }
 
+    /** Returns paged cards for selected user id. */
     public Page<Card> getCardsByUserId(Long userId, Pageable pageable){
         userService.getUserById(userId);
         return cardRepository.findAllByUserId(userId, pageable);
     }
 
+    /** Returns paged cards for current user. */
     public Page<Card> getCardsForUser(Long userId, Pageable pageable) {
         return cardRepository.findAllByUserId(userId, pageable);
     }
 
+    /** Returns paged cards for administrators. */
     public Page<Card> getAllCards(Pageable pageable) {
         return cardRepository.findAll(pageable);
     }
 
+    /** Blocks card by administrator action. */
     public Card blockCardByAdmin(Long cardId){
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
@@ -71,6 +79,7 @@ public class CardService {
         return cardRepository.save(card);
     }
 
+    /** Blocks current user's own card by request. */
     public Card requestBlockCard(Long cardId, Long userId) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
@@ -81,6 +90,7 @@ public class CardService {
         return cardRepository.save(card);
     }
 
+    /** Activates previously blocked card. */
     public Card activateCard(Long cardId) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
@@ -88,12 +98,14 @@ public class CardService {
         return cardRepository.save(card);
     }
 
+    /** Deletes card by identifier. */
     public void deleteCard(Long cardId) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Карта с ID " + cardId + " не найдена"));
         cardRepository.delete(card);
     }
 
+    /** Transfers money between two cards of the same user. */
     @Transactional
     public void transferMoney(Long userId, Long fromCardId, String toCardNumber, BigDecimal amount) {
         Card fromCard = cardRepository.findById(fromCardId)

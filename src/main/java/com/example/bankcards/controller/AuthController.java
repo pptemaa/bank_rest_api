@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller responsible for user authentication.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Авторизация", description = "Выдача цифровых ключей (JWT)")
@@ -26,6 +29,8 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
+
+    /** Authenticates user and returns JWT token on success. */
     @PostMapping
     @Operation(summary = "Войти в систему",description = "Проверяет логин/пароль и выдает JWT токен")
     public ResponseEntity<?> login(@Valid @RequestBody UserLoginDto request){

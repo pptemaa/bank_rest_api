@@ -11,8 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +32,7 @@ class UserServiceTest {
 
     @Test
     void testCreateUser() {
-        when(userRepository.findByUsername("new_user")).thenReturn(Optional.empty());
+        when(userRepository.existsByUsernameAndDeletedFalse("new_user")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("encoded_secret");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -48,9 +46,7 @@ class UserServiceTest {
 
     @Test
     void testCreateUserDuplicate() {
-        User existing = new User();
-        existing.setUsername("existing");
-        when(userRepository.findByUsername("existing")).thenReturn(Optional.of(existing));
+        when(userRepository.existsByUsernameAndDeletedFalse("existing")).thenReturn(true);
 
         assertThrows(UserException.class, () -> userService.createUser("existing", "123456"));
         verify(userRepository, never()).save(any(User.class));

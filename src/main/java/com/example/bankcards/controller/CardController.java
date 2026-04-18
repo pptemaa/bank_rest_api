@@ -18,6 +18,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller exposing card management and transfer endpoints.
+ */
 @RestController
 @RequestMapping("/api/cards")
 @Tag(name = "Банковские карты", description = "API для выпуска, просмотра, блокировки карт и перевода средств")
@@ -31,6 +34,7 @@ public class CardController {
         this.cardMapper = cardMapper;
     }
 
+    /** Creates card for selected user (admin only). */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
@@ -43,6 +47,7 @@ public class CardController {
         return cardMapper.toDto(newCard);
     }
 
+    /** Returns paged list of all cards (admin only). */
     @GetMapping("/all")
     @Operation(
             summary = "Получение списка всех карт",
@@ -58,6 +63,7 @@ public class CardController {
         return cardService.getAllCards(pageable).map(cardMapper::toDto);
     }
 
+    /** Returns paged list of user cards (admin only). */
     @GetMapping("/user/{userId}")
     @Operation(
             summary = "Получение списка карт пользователя администратором",
@@ -74,6 +80,7 @@ public class CardController {
         return cardService.getCardsByUserId(userId, pageable).map(cardMapper::toDto);
     }
 
+    /** Returns paged list of current user's cards. */
     @GetMapping("/me")
     @Operation(
             summary = "Получение списка своих карт",
@@ -98,6 +105,7 @@ public class CardController {
         return PageRequest.of(page, size, Sort.by(sortDirection, "id"));
     }
 
+    /** Sends user request to block own card. */
     @PatchMapping("/{cardId}/block-request")
     @PreAuthorize("hasRole('USER')")
     @Operation(
@@ -110,6 +118,7 @@ public class CardController {
         return cardMapper.toDto(blockedCard);
     }
 
+    /** Blocks card by admin action. */
     @PatchMapping("/{cardId}/block")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
@@ -121,6 +130,7 @@ public class CardController {
         return cardMapper.toDto(blockedCard);
     }
 
+    /** Activates card by admin action. */
     @PatchMapping("/{cardId}/activate")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
@@ -131,6 +141,7 @@ public class CardController {
         Card blockedCard = cardService.activateCard(cardId);
         return cardMapper.toDto(blockedCard);
     }
+    /** Deletes card by admin action. */
     @DeleteMapping("/{cardId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
@@ -142,6 +153,7 @@ public class CardController {
         cardService.deleteCard(cardId);
     }
 
+    /** Transfers money between user's own cards. */
     @PostMapping("/transfer")
     @PreAuthorize("hasRole('USER')")
     @Operation(

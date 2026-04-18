@@ -11,6 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+
+/**
+ * Controller for user registration and admin user operations.
+ */
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Пользователи", description = "Методы для управления клиентами банка")
@@ -19,6 +23,8 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
+    /** Registers new user in the system. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Регистрация нового пользователя", description = "Создает нового клиента в базе данных. Логин должен быть уникальным.")
@@ -27,6 +33,7 @@ public class UserController {
         return "Пользователь " + savedUser.getUsername() + " успешно зарегистрирован с ID: " + savedUser.getId();
     }
 
+    /** Returns all active users for admin. */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Получить всех пользователей", description = "Доступно только администратору.")
@@ -36,6 +43,7 @@ public class UserController {
                 .toList();
     }
 
+    /** Updates user role for admin. */
     @PatchMapping("/{userId}/role")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Изменить роль пользователя", description = "Доступно только администратору.")
@@ -44,6 +52,7 @@ public class UserController {
         return new UserResponseDto(updatedUser.getId(), updatedUser.getUsername(), updatedUser.getRole());
     }
 
+    /** Performs soft delete of user for admin. */
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
