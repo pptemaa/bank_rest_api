@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: db/migration/v1_init_schema.sql
