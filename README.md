@@ -8,9 +8,11 @@
     <li>Переводы между своими картами</li>
   </ul>
 
+<p><a href="docs/portfolio/README.md">Аналитический кейс: требования, диаграммы, схема данных и API</a></p>
+
 <h2>💳 Атрибуты карты</h2>
   <ul>
-    <li>Номер карты (зашифрован, отображается маской: <code>**** **** **** 1234</code>)</li>
+    <li>Номер карты (хранится в БД открытым текстом, в ответе API отображается маской: <code>**** **** **** 1234</code>)</li>
     <li>Владелец</li>
     <li>Срок действия</li>
     <li>Статус: Активна, Заблокирована, Истек срок</li>
@@ -35,7 +37,7 @@
 
 <strong>Пользователь:</strong>
   <ul>
-    <li>Просматривает свои карты (поиск + пагинация)</li>
+    <li>Просматривает свои карты с пагинацией</li>
     <li>Запрашивает блокировку карты</li>
     <li>Делает переводы между своими картами</li>
     <li>Смотрит баланс</li>
@@ -51,14 +53,14 @@
 
 <h3>✅ Безопасность</h3>
   <ul>
-    <li>Шифрование данных</li>
+    <li>Хэширование паролей BCrypt; номер карты пока не зашифрован в БД</li>
     <li>Ролевой доступ</li>
     <li>Маскирование номеров карт</li>
   </ul>
 
 <h3>✅ Работа с БД</h3>
   <ul>
-    <li>PostgreSQL или MySQL</li>
+    <li>PostgreSQL</li>
     <li>Миграции через Liquibase (<code>src/main/resources/db/migration</code>)</li>
   </ul>
 
@@ -77,7 +79,7 @@
 
 <h2>💡 Технологии</h2>
   <p>
-    Java 17+, Spring Boot, Spring Security, Spring Data JPA, PostgreSQL/MySQL, Liquibase, Docker, JWT, Swagger (OpenAPI)
+    Java 17+, Spring Boot, Spring Security, Spring Data JPA, PostgreSQL, Liquibase, Docker, JWT, Swagger (OpenAPI)
   </p>
 <h2> Примечание</h2>
 <p>
